@@ -206,9 +206,27 @@ void fade_in_logo() {
 }
 void background_init() {
     for(uint32_t step = 0; step <= 255; step += 5) {
-        uint32_t color = (step << 16) | (step << 8) | (step / 2); // Gradually change 
-        framebuffer_clear(color);
-        delay_seconds(1);
+        for (uint32_t y = 0; y < bg_height; y++) {
+            for (uint32_t x = 0; x < bg_width; x++) {
+                uint32_t color = bgPixels[y * bg_width + x];
+                if (color == 0x000000) continue;
+
+                uint8_t r = (color >> 16) & 0xFF;
+                uint8_t g = (color >> 8) & 0xFF;
+                uint8_t b = color & 0xFF;
+
+                r = (r * step) / 255;
+                g = (g * step) / 255;
+                b = (b * step) / 255;
+
+                framebuffer_putpixel(
+                    (fb.width - bg_width) / 2 + x,
+                    (fb.height - bg_height) / 2 + y,
+                    (r << 16) | (g << 8) | b
+                );
+            }
+        }
+        delay_seconds(1);  // smooth fade
     }
 }
 
@@ -280,7 +298,7 @@ void kernel_higher_half_main(void) {
     // fb.address is already updated in higher_half_map()
     if (fb.ready) {
         display_logo();
-        framebuffer_clear(0xFFFF22); // Match logo background
+        framebuffer_clear(0x000000); // Match logo background
         background_init();
     }
 
