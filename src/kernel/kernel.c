@@ -33,7 +33,7 @@ extern uint32_t __kernel_start;
 extern uint32_t __kernel_end;
 extern uint32_t page_directory[1024];
 
-/* Full 8x8 font bitmap provided in your previous message... */
+/* Full 8x8 font bitmap */
 extern char font8x8_basic[128][8]; 
 
 uint32_t cursor_x = 0;
@@ -67,14 +67,14 @@ void pmm_init_from_multiboot(multiboot_info_t* mbi) {
             ((uint32_t)mmap + mmap->size + sizeof(uint32_t));
     }
 
-    // 1️⃣ Mark kernel as USED
+    // 1 Mark kernel as USED
     for (uint32_t addr = (uint32_t)&__kernel_start;
          addr < (uint32_t)&__kernel_end;
          addr += PMM_BLOCK_SIZE) {
         pmm_mark_used(addr);
     }
 
-    // 2️⃣ Mark PMM bitmap itself as USED
+    // 2️ Mark PMM bitmap itself as USED
     uint32_t bitmap_start = (uint32_t)pmm_bitmap;
     uint32_t bitmap_end   = bitmap_start + pmm_bitmap_size;
 
@@ -86,7 +86,7 @@ void pmm_init_from_multiboot(multiboot_info_t* mbi) {
 }
 
 
-/* 1. Added terminal_write (This fixes your linker error) */
+/* 1. Added terminal_write  */
 void terminal_write_hex(uint32_t n) {
     char hex_chars[] = "0123456789ABCDEF";
     char buffer[9];
@@ -103,7 +103,7 @@ void terminal_write(const char* s) {
     }
 }
 
-/* 2. Fixed terminal_putchar logic */
+/* 2.  terminal_putchar logic */
 void terminal_putchar(char c) {
     if (c == '\n') {
         cursor_x = 0;
@@ -152,8 +152,7 @@ void draw_mouse_cursor(uint32_t x, uint32_t y) {
 }
 
 void erase_mouse_cursor(uint32_t x, uint32_t y) {
-    // IMPORTANT: This must match your background color exactly.
-    // If your shell background is 0x000022, this is correct.
+    // IMPORTANT: This must match  background color exactly.
     for(int i = 0; i < 5; i++) {
         for(int j = 0; j < 5; j++) {
             if ((x + i) < fb.width && (y + j) < fb.height) {
@@ -165,7 +164,6 @@ void erase_mouse_cursor(uint32_t x, uint32_t y) {
 
 /* 4. Boot Logo */
 void delay_seconds(uint32_t seconds) {
-    // Note: 50,000,000 is a rough estimate for 1 second on a 1GHz-ish CPU/Emulator
     for (uint32_t s = 0; s < seconds; s++) {
         for (volatile uint32_t i = 0; i < 50000000; i++);
     }
@@ -208,7 +206,7 @@ void fade_in_logo() {
 }
 void background_init() {
     for(uint32_t step = 0; step <= 255; step += 5) {
-        uint32_t color = (step << 16) | (step << 8) | (step / 2); // Gradually change from black to a dark gray-blue
+        uint32_t color = (step << 16) | (step << 8) | (step / 2); // Gradually change 
         framebuffer_clear(color);
         delay_seconds(1);
     }
@@ -224,32 +222,6 @@ static inline void flush_tlb(void) {
     );
 }
 
-// void kernel_main(void) {
-//     gdt_init();
-//     framebuffer_init((multiboot_info_t*)multiboot_ptr);
-//     fb.ready = 1;
-//     terminal_write("fb.ready = ");
-// terminal_write_hex(fb.ready);
-// terminal_write("\n");
-
-//     // 1. Paging ON (identity + recursive)
-//     paging_init();
-
-//     // 2. PMM init (still identity)
-//     multiboot_info_t* mbi = (multiboot_info_t*)multiboot_ptr;
-//     uint32_t bitmap_addr = (uint32_t)&__kernel_end + 0x1000;
-//     uint32_t mem_size = (mbi->mem_upper * 1024) + 0x100000;
-
-//     pmm_init(mem_size, bitmap_addr);
-//     pmm_init_from_multiboot(mbi);
-
-//     // 3. Build higher-half mappings
-//     higher_half_map();
-
-//     // 4. Transition CPU + stack
-//     jump_to_higher_half();
-
-// }
 #define PAGE_DIR_VADDR 0xFFFFF000
 
 void unmap_identity_safe(void) {
@@ -337,93 +309,3 @@ void kernel_higher_half_main(void) {
 }
 
 
-
-// void kernel_higher_half_main(void) {
-//     asm volatile("cli");
-//     gdt_init();
-//     idt_init();
-
-//     terminal_write("transitioned to Higher Half at 0xC0000000!\n");
-    
-//     // --- Display logo safely ---
-//     // unmap_identity_mapping_safe();
-//     if (fb.ready) {
-//         display_logo();          // fade-in
-//         framebuffer_clear(0x000022);
-//     }
-    
-//     mouse_init();
-//     terminal_write("FB addr = ");
-//     terminal_write_hex((uint32_t)fb.address);
-//     terminal_write("\n");
-
-//     // terminal_write("framebuffer address: ");
-//     terminal_write("Sachin OS: Higher Half Boot Successful\n> ");
-
-//     // --- Now safe to remove identity mapping ---
-
-//     asm volatile("sti");
-
-//     while (1) asm volatile("hlt");
-// }
-
-// void kernel_higher_half_main(void) {
-//     // ===== FROM HERE: PURE HIGHER HALF =====
-//     asm volatile("cli");
-
-//     gdt_init();   // reload if needed
-//     idt_init();
-//     terminal_write("transitioned to Higher Half at 0xC0000000!\n");
-
-//     // page_directory[0] = 0; 
-    
-//     // // 5. The Moment of Truth
-//     // flush_tlb();
-//     // asm volatile("sti");
-//     // terminal_write("identity mapping unmapped.\n");
-//     // // unmap_identity_mapping();
-//     // // flush_tlb();
-
-//     // if (fb.ready) {
-//     //     display_logo();
-//     //     framebuffer_clear(0x000022);
-//     // }
-//     // terminal_write("test\n");
-    
-
-//     // mouse_init();
-//     // terminal_write("Sachin OS: Higher Half Boot Successful\n> ");
-
-//     while (1) asm volatile("hlt");
-// }
-// void kernel_main(void) {
-//     gdt_init();
-//     framebuffer_init((multiboot_info_t*)multiboot_ptr);
-
-//     // 1. Enable Dual-Mapping (Identity + Higher Half)
-//     paging_init();
-
-//     // 2. Initialize PMM using the FIXED physical symbols from linker.ld
-//     multiboot_info_t* mbi = (multiboot_info_t*)multiboot_ptr;
-//     uint32_t bitmap_addr = (uint32_t)&__kernel_end + 0x1000;
-//     uint32_t mem_size = (mbi->mem_upper * 1024) + 0x100000;
-    
-//     pmm_init(mem_size, bitmap_addr);
-//     pmm_init_from_multiboot(mbi);
-
-//     // 3. Jump to Virtual Space
-//     idt_init();
-//     asm volatile("sti");
-
-//     if (fb.ready) {
-//         display_logo(); // Logo will now show because memory is mapped correctly
-//         framebuffer_clear(0x000022);
-//     }
-
-//     mouse_init();
-//     terminal_write("Sachin OS: Higher Half Boot Successful\n> ");
-
-//     while (1) {
-//         asm volatile("hlt");
-//     }
-// }
