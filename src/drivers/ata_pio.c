@@ -28,35 +28,7 @@ void ata_wait_drq()
 
     terminal_write("ATA TIMEOUT\n");
 }
-// void ata_read_sector(uint32_t lba, uint8_t* buffer) {
-//     ata_wait_busy();
-//     outb(0x1F6, 0xE0 | ((lba >> 24) & 0x0F)); // LBA mode + drive 0
-//     outb(0x1F2, 1); // sector count
-//     outb(0x1F3, lba & 0xFF); // LBA low
-//     outb(0x1F4, (lba >> 8) & 0xFF); // LBA mid
-//     outb(0x1F5, (lba >> 16) & 0xFF); // LBA high
-//     outb(0x1F7, 0x20);
-//     // 400ns delay
-//     inb(0x1F7);
-//     inb(0x1F7);
-//     inb(0x1F7);
-//     inb(0x1F7);
 
-//     ata_wait_drq();
-
-//     for(int i=0;i<256;i++)
-//     {
-//         ((uint16_t*)buffer)[i] = inw(0x1F0);
-//     }
-//     for(int i = 0; i < 16; i++)
-//     {
-//         terminal_write_hex(buffer[i]);
-//         terminal_write(" ");
-//     }
-    
-// terminal_write("\n");
-//     terminal_write("Read sector from disk using ATA PIO!\n");
-// }
 void ata_read_sector(uint32_t lba, uint8_t* buffer)
 {
     ata_wait_busy();
@@ -93,11 +65,7 @@ void ata_read_sector(uint32_t lba, uint8_t* buffer)
     else{
         terminal_write("\n");
     }
-    // if(buffer[510] == 0x55 && buffer[511] == 0xAA)
-    //     terminal_write("Valid MBR signature found!\n");
-    // else{
-    //     terminal_write("Invalid MBR signature!\n");
-    // }
+    
 
     terminal_write("\n");
 }
