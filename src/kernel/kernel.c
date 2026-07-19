@@ -146,7 +146,7 @@ void draw_mouse_cursor(uint32_t x, uint32_t y) {
             // Ensure we don't draw off-screen to avoid crashes
             if ((x + i) < fb.width && (y + j) < fb.height) {
                 read_pixel(x+i, y+j, &saved_pixel_colors[i * 10 + j]);
-                framebuffer_putpixel(x + i, y + j, 0xD9D9D9); 
+                framebuffer_putpixel(x + i, y + j, 0x00363D); 
             }
         }
     }
