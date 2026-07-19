@@ -14,6 +14,7 @@
 #include "../include/ata_pio.h"
 #include "../include/kstring.h"
 #include "../include/background.h"
+#include "../include/heap.h"
 
 #define Author "Sachin Kumar"
 
@@ -137,15 +138,15 @@ void terminal_putchar(char c) {
 
 /* 3. Mouse Stubs */
 /* 3. Mouse Handlers */
-uint32_t saved_pixel_colors[25]; // To save background pixels
+uint32_t saved_pixel_colors[100]; // To save background pixels
 void draw_mouse_cursor(uint32_t x, uint32_t y) {
     // Draws a 5x5 red square
-    for(int i = 0; i < 5; i++) {
-        for(int j = 0; j < 5; j++) {
+    for(int i = 0; i < 10; i++) {
+        for(int j = 0; j <= i+1; j++) {
             // Ensure we don't draw off-screen to avoid crashes
             if ((x + i) < fb.width && (y + j) < fb.height) {
-                read_pixel(x+i, y+j, &saved_pixel_colors[i * 5 + j]);
-                framebuffer_putpixel(x + i, y + j, 0xFF0000); 
+                read_pixel(x+i, y+j, &saved_pixel_colors[i * 10 + j]);
+                framebuffer_putpixel(x + i, y + j, 0xD9D9D9); 
             }
         }
     }
@@ -153,10 +154,10 @@ void draw_mouse_cursor(uint32_t x, uint32_t y) {
 
 void erase_mouse_cursor(uint32_t x, uint32_t y) {
     // IMPORTANT: This must match  background color exactly.
-    for(int i = 0; i < 5; i++) {
-        for(int j = 0; j < 5; j++) {
+    for(int i = 0; i < 10; i++) {
+        for(int j = 0; j <= i+1; j++) {
             if ((x + i) < fb.width && (y + j) < fb.height) {
-                framebuffer_putpixel(x + i, y + j, saved_pixel_colors[i * 5 + j]);
+                framebuffer_putpixel(x + i, y + j, saved_pixel_colors[i * 10 + j]);
             }
         }
     }
@@ -263,9 +264,9 @@ void kernel_main(void) {
     gdt_init();
     framebuffer_init((multiboot_info_t*)multiboot_ptr);
     fb.ready = 1;
-    terminal_write("fb.ready = ");
-    terminal_write_hex(fb.ready);
-    terminal_write("\n");
+    // terminal_write("fb.ready = ");
+    // terminal_write_hex(fb.ready);
+    // terminal_write("\n");
 
     paging_init(); // Identity + recursive
     multiboot_info_t* mbi = (multiboot_info_t*)multiboot_ptr;
@@ -286,6 +287,9 @@ void kernel_higher_half_main(void) {
         uint16_t id;
         char name[16];
     };
+    void* heap_start = (void*)0x100000; // Example heap start address
+    size_t total_size = 0x100000; // Example heap size
+    memory_init(heap_start, total_size);
     struct fs myfs = {1, "sachinfs"};
     uint8_t buffers[256];
     memcpy(buffers, &myfs, sizeof(myfs));
@@ -293,7 +297,7 @@ void kernel_higher_half_main(void) {
     gdt_init();
     idt_init();
 
-    terminal_write("Entering Higher Half at 0xC0000000...\n");
+    // terminal_write("Entering Higher Half at 0xC0000000...\n");
 
     // fb.address is already updated in higher_half_map()
     if (fb.ready) {
@@ -306,20 +310,36 @@ void kernel_higher_half_main(void) {
     // keyboard_init();  // must call this
     // unmap_identity_safe();
 
-    terminal_write("Framebuffer at: ");
-    terminal_write_hex((uint32_t)fb.address);
-    terminal_write("\n");
-    terminal_write("Sachin OS: Higher Half Boot Successful\n> ");
-    ata_read_sector(0, (uint8_t*)0x8000); // Test ATA PIO read
+    // terminal_write("Framebuffer at: ");
+    // terminal_write_hex((uint32_t)fb.address);
+    // terminal_write("\n");
+    // terminal_write("Sachin OS: Higher Half Boot Successful\n> ");
+    // void* ptr = kmalloc(sizeof(struct fs));
+    // // void* read_back_ptr = kmalloc(sizeof(struct fs));
+    // if (ptr) {
+    //     ata_read_sector(50, (uint8_t*)ptr); // Read sector 0 into allocated memory
+    //     // memcpy(read_back_ptr, (void*)ptr, sizeof(myfs));
+    //     terminal_write("Allocated fs struct at: ");
+    //     terminal_write_hex((uint32_t)ptr);
+    //     terminal_write(", id=");
+    //     terminal_write_hex(((struct fs*)ptr)->id);
+    //     terminal_write(", name=");
+    //     terminal_write(((struct fs*)ptr)->name);
+    //     terminal_write("\n");
+    // } else {
+    //     terminal_write("Memory allocation failed!\n");
+    // }
+    // kfree(ptr); // Free the allocated memory
+    // ata_read_sector(0, (uint8_t*)0x8000); // Test ATA PIO read
     // ata_write_sector(50, buffers); // Test ATA PIO write
-    ata_read_sector(50, (uint8_t*)0x8000); // Verify write
-    struct fs read_back;
-    memcpy(&read_back, (void*)0x8000, sizeof(read_back));
-    terminal_write("Read back from disk: id=");
-    terminal_write_hex(read_back.id);
-    terminal_write(", name=");
-    terminal_write(read_back.name);
-    terminal_write("\n");
+    // ata_read_sector(50, (uint8_t*)0x8000); // Verify write
+    // struct fs read_back;
+    // memcpy(&read_back, (void*)0x8000, sizeof(read_back));
+    // terminal_write("Read back from disk: id=");
+    // terminal_write_hex(read_back.id);
+    // terminal_write(", name=");
+    // terminal_write(read_back.name);
+    // terminal_write("\n");
 
     asm volatile("sti");
 
