@@ -15,6 +15,7 @@
 #include "../include/kstring.h"
 #include "../include/background.h"
 #include "../include/heap.h"
+#include "../include/window.h"
 
 #define Author "Sachin Kumar"
 
@@ -116,7 +117,7 @@ void terminal_putchar(char c) {
         if (cursor_x >= 8) cursor_x -= 8;
         for (int py = 0; py < 8; py++)
             for (int px = 0; px < 8; px++)
-                framebuffer_putpixel(cursor_x + px, cursor_y + py, 0x000000); // Match background
+                framebuffer_putpixel(cursor_x + px, cursor_y + py, 0xFFFFFF); // Match background
         return;
     }
 
@@ -304,6 +305,7 @@ void kernel_higher_half_main(void) {
         display_logo();
         framebuffer_clear(0x000000); // Match logo background
         background_init();
+        window_init();
     }
 
     mouse_init();
@@ -342,6 +344,7 @@ void kernel_higher_half_main(void) {
     // terminal_write("\n");
 
     asm volatile("sti");
+
 
     while (1) asm volatile("hlt");
 }

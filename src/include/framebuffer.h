@@ -19,5 +19,6 @@ void framebuffer_init(multiboot_info_t* mb_info);
 void framebuffer_putpixel(unsigned int x, unsigned int y, uint32_t color);
 void framebuffer_clear(uint32_t color);
 void read_pixel(unsigned int x, unsigned int y, uint32_t* color);
+void blend_color(uint32_t* bg, uint32_t fg, float alpha);
 
 #endif
