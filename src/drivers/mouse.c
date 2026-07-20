@@ -1,13 +1,21 @@
 #include "../include/mouse.h"
 #include "../include/portio.h"
 #include "../include/framebuffer.h"
+#include "../include/window.h"
+
 
 int mouse_x = 400; 
 int mouse_y = 300;
+bool mouse_left_button_pressed;
+bool mouse_right_button_pressed;
+bool mouse_middle_button_pressed;
+bool mouse_left_button_prev;
+bool mouse_right_button_prev;
+bool mouse_middle_button_prev;
 
 static uint8_t packet[3];
 static uint8_t cycle = 0;
-
+rectangle_t r = {100 * 4, 60 * 4};
 extern void draw_mouse_cursor(int x, int y);
 extern void erase_mouse_cursor(int x, int y);
 
@@ -21,6 +29,20 @@ void mouse_irq_handler(uint8_t data) {
 
     if (cycle < 3) return;
     cycle = 0;
+    mouse_left_button_prev = mouse_left_button_pressed;
+    mouse_right_button_prev = mouse_right_button_pressed;
+    mouse_middle_button_prev = mouse_middle_button_pressed;
+    mouse_left_button_pressed = (packet[0] & 0x01) != 0;
+    mouse_right_button_pressed = (packet[0] & 0x02) != 0;
+    mouse_middle_button_pressed = (packet[0] & 0x04) != 0;
+    if(mouse_left_button_pressed && !mouse_left_button_prev) {
+        draw_rectangle(&r, fb.width / 2 - r.width / 2, fb.height / 2 - r.height / 2, 0xFF0080, 0.5f);
+        // terminal_write("Mouse Left Button Clicked at ");
+        // terminal_write_hex(mouse_x);
+        // terminal_write(", ");
+        // terminal_write_hex(mouse_y);
+        // terminal_write("\n");
+    }
 
     erase_mouse_cursor(mouse_x, mouse_y); // Fixed: added arguments
 

@@ -43,4 +43,19 @@ void read_pixel(unsigned int x, unsigned int y, uint32_t* color) {
 
     uint8_t* pixel = (uint8_t*)fb.address + (y * fb.pitch) + (x * (fb.bpp / 8));
     *color = *(uint32_t*)pixel;
-}  
+}
+void blend_color(uint32_t* bg, uint32_t fg, float alpha) {
+    uint8_t src_r = (fg >> 16) & 0xFF;
+    uint8_t src_g = (fg >> 8) & 0xFF;
+    uint8_t src_b = fg & 0xFF;
+
+    uint8_t dest_r = (*bg >> 16) & 0xFF;
+    uint8_t dest_g = (*bg >> 8) & 0xFF;
+    uint8_t dest_b = *bg & 0xFF;
+
+    uint8_t blended_r = (uint8_t)(src_r * alpha + dest_r * (1 - alpha));
+    uint8_t blended_g = (uint8_t)(src_g * alpha + dest_g * (1 - alpha));
+    uint8_t blended_b = (uint8_t)(src_b * alpha + dest_b * (1 - alpha));
+
+    *bg = (blended_r << 16) | (blended_g << 8) | blended_b;
+}

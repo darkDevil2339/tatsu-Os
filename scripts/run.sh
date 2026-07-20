@@ -44,6 +44,8 @@ $CC $CFLAGS -I$SRC/include -c $SRC/drivers/mouse.c -o $BUILD/mouse.o
 $CC $CFLAGS -I$SRC/include -c $SRC/drivers/ata_pio.c -o $BUILD/ata_pio.o
 $CC $CFLAGS -I$SRC/include -c $SRC/drivers/heap.c -o $BUILD/heap.o
 $CC $CFLAGS -I$SRC/include -c $SRC/drivers/file_system.c -o $BUILD/filesystem.o
+$CC $CFLAGS -I$SRC/include -c $SRC/drivers/window.c -o $BUILD/window.o
+$CC $CFLAGS -I$SRC/include -c $SRC/drivers/bitmap.c -o $BUILD/bitmap.o
 
 # ---------- LINK ----------
 echo "[*] Linking kernel..."
@@ -58,7 +60,9 @@ $LD $LDFLAGS \
     $BUILD/interrept.o \
     $BUILD/gdt.o \
     $BUILD/idt.o \
+    $BUILD/bitmap.o \
     $BUILD/framebuffer.o \
+    $BUILD/window.o \
     $BUILD/keyboard.o \
     $BUILD/mouse.o \
     $BUILD/ata_pio.o \
