@@ -23,13 +23,19 @@ void update_window(rectangle_t* rect, uint32_t x, uint32_t y, uint32_t color, fl
         }
     }
 }
-void text_box( uint32_t x, uint32_t y, const char* text, uint32_t text_color) {
+void text_box(int scale, uint32_t x, uint32_t y, const char* text, uint32_t text_color) {
     for (size_t i = 0; text[i] != '\0'; i++) {
         char c = text[i];
         for (int py = 0; py < 8; py++) {
             for (int px = 0; px < 8; px++) {
                 if (font8x8_basic[(int)c][py] & (1 << px)) {
-                    framebuffer_putpixel(x + px+i*8, y + py, text_color);
+                    for(int sy = 0; sy < scale; sy++) {
+                        for(int sx = 0; sx < scale; sx++) {
+                            framebuffer_putpixel(x + (px+i*8)*scale + sx, y + py*scale + sy, text_color);
+                        }
+                    }
+
+                    // framebuffer_putpixel(x + (px+i*8)*scale, y + py*scale, text_color);
                 }
             }
         }
@@ -38,12 +44,12 @@ void text_box( uint32_t x, uint32_t y, const char* text, uint32_t text_color) {
 void window_init() {
     // Initialization code for the window
     rect.width = 100*4;  // Example width
-    rect.height = 60*4; // Example height 564957114288
+    rect.height = 60*4; 
     draw_rectangle(&rect, fb.width / 2 - rect.width / 2, fb.height / 2 - rect.height / 2, 0x800080, 0.5f);
     rect.width = 160;
     rect.height = 40; 
     draw_rectangle(&rect, fb.width / 2 - rect.width / 2, fb.height / 2 - rect.height / 2, 0xFFFFFF, 0.6f);
-    text_box(fb.width / 2 - rect.width / 2 + 10, fb.height / 2 - rect.height / 2 + 10, "Welcome !", 0x000000);
-    text_box(fb.width / 2 - rect.width / 2 + 10, fb.height / 2 - rect.height / 2 + 30, "Sachin OS", 0x000000);
+    text_box(2, fb.width / 2 - rect.width / 2 + 10, fb.height / 2 - rect.height, "Welcome !", 0xFFFFFF);
+    text_box(2, fb.width / 2 - rect.width / 2 + 10, fb.height / 2 - rect.height / 2 + 10, "Anonymous", 0xFFFFFF);
 
 }

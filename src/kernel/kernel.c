@@ -142,12 +142,28 @@ void terminal_putchar(char c) {
 uint32_t saved_pixel_colors[100]; // To save background pixels
 void draw_mouse_cursor(uint32_t x, uint32_t y) {
     // Draws a 5x5 red square
-    for(int i = 0; i < 10; i++) {
-        for(int j = 0; j <= i+1; j++) {
-            // Ensure we don't draw off-screen to avoid crashes
-            if ((x + i) < fb.width && (y + j) < fb.height) {
-                read_pixel(x+i, y+j, &saved_pixel_colors[i * 10 + j]);
-                framebuffer_putpixel(x + i, y + j, 0x00363D); 
+    // for(int i = 0; i < 10; i++) {
+    //     for(int j = 0; j <= i+1; j++) {
+    //         // Ensure we don't draw off-screen to avoid crashes
+    //         if ((x + i) < fb.width && (y + j) < fb.height) {
+    //             read_pixel(x+i, y+j, &saved_pixel_colors[i * 10 + j]);
+    //             framebuffer_putpixel(x + i, y + j, 0x00363D); 
+    //         }
+    //     }
+    // }
+    for (int i = 0; i < 16; i++) {
+        for (int j = 0; j < 16; j++) {
+            if (tatsu_cursor[i] & (1 << (15 - j))) { // Check if the pixel is ON
+                // Ensure we don't draw off-screen to avoid crashes
+                if ((x + j) < fb.width && (y + i) < fb.height) {
+                    read_pixel(x + j, y + i, &saved_pixel_colors[i * 16 + j]);
+                    if (saved_pixel_colors[i * 16 + j] == 0xFFFFFF) {
+                        framebuffer_putpixel(x + j, y + i, 0x000000); // Draw cursor pixel
+                    } else {
+                        framebuffer_putpixel(x + j, y + i, 0xFFFFFF); // Draw cursor pixel
+                    }
+                    // framebuffer_putpixel(x + j, y + i, 0xFFFFFF); // Draw cursor pixel
+                }
             }
         }
     }
@@ -155,10 +171,19 @@ void draw_mouse_cursor(uint32_t x, uint32_t y) {
 
 void erase_mouse_cursor(uint32_t x, uint32_t y) {
     // IMPORTANT: This must match  background color exactly.
-    for(int i = 0; i < 10; i++) {
-        for(int j = 0; j <= i+1; j++) {
-            if ((x + i) < fb.width && (y + j) < fb.height) {
-                framebuffer_putpixel(x + i, y + j, saved_pixel_colors[i * 10 + j]);
+    // for(int i = 0; i < 10; i++) {
+    //     for(int j = 0; j <= i+1; j++) {
+    //         if ((x + i) < fb.width && (y + j) < fb.height) {
+    //             framebuffer_putpixel(x + i, y + j, saved_pixel_colors[i * 10 + j]);
+    //         }
+    //     }
+    // }
+    for (int i = 0; i < 16; i++) {
+        for (int j = 0; j < 16; j++) {
+            if (tatsu_cursor[i] & (1 << (15 - j))) { // Check if the pixel is ON
+                if ((x + j) < fb.width && (y + i) < fb.height) {
+                    framebuffer_putpixel(x + j, y + i, saved_pixel_colors[i * 16 + j]);
+                }
             }
         }
     }

@@ -20,7 +20,7 @@ typedef struct {
 } circle_t;
 void draw_rectangle(rectangle_t* rect, uint32_t x, uint32_t y, uint32_t color, float alpha);
 void update_window(rectangle_t* rect, uint32_t x, uint32_t y, uint32_t color, float alpha);
-void text_box(uint32_t x, uint32_t y, const char* text, uint32_t text_color);
+void text_box(int scale, uint32_t x, uint32_t y, const char* text, uint32_t text_color);
 void window_init();
 
 #endif // Window_H

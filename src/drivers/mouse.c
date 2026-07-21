@@ -4,14 +4,33 @@
 #include "../include/window.h"
 
 
-int mouse_x = 400; 
-int mouse_y = 300;
+int mouse_x = 100; 
+int mouse_y = 100;
 bool mouse_left_button_pressed;
 bool mouse_right_button_pressed;
 bool mouse_middle_button_pressed;
 bool mouse_left_button_prev;
 bool mouse_right_button_prev;
 bool mouse_middle_button_prev;
+
+uint16_t tatsu_cursor[16] = {
+    0x8000, // 1000000000000000
+    0xC000, // 1100000000000000
+    0xE000, // 1110000000000000
+    0xF000, // 1111000000000000
+    0xF800, // 1111100000000000
+    0xFC00, // 1111110000000000
+    0xFE00, // 1111111000000000
+    0xFF00, // 1111111100000000
+    0xFF80, // 1111111110000000
+    0xFEC0, // 1111111011000000
+    0xEC00, // 1110110001100000
+    0xC600, // 1100011000110000
+    0x0300, // 0000001100011000
+    0x0180, // 0000000110001100
+    0x00C0, // 0000000011000110
+    0x0000  // 0000000000000000
+};
 
 static uint8_t packet[3];
 static uint8_t cycle = 0;

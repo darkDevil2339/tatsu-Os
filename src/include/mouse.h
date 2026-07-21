@@ -13,6 +13,10 @@ extern bool mouse_left_button_prev;
 extern bool mouse_right_button_prev;
 extern bool mouse_middle_button_prev;
 
+// Tatsu OS Cursor (16x16)
+// 1 = pixel ON, 0 = pixel OFF
+
+extern uint16_t tatsu_cursor[16];
 void mouse_init(void);
 void mouse_irq_handler(uint8_t data);
 
