@@ -2,6 +2,7 @@
 #include "../include/multiboot.h"
 #include <stddef.h>
 
+
 framebuffer_t fb = {0};
 
 void framebuffer_init(multiboot_info_t* mb_info) {

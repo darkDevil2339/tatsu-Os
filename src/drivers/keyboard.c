@@ -1,9 +1,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "../include/portio.h"
+#include "../include/window.h"
+
 
 extern void terminal_putchar(char c);
 
+int x = 30;
 static const char keymap[128] = {
     0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 8,
     '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n', 0,

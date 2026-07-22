@@ -16,6 +16,7 @@
 #include "../include/background.h"
 #include "../include/heap.h"
 #include "../include/window.h"
+#include "../include/terminal.h"
 
 #define Author "Sachin Kumar"
 
@@ -40,7 +41,7 @@ extern char font8x8_basic[128][8];
 
 uint32_t cursor_x = 0;
 uint32_t cursor_y = 0;
-uint32_t text_color = 0xFFFFFF; // White
+uint32_t text_color = 0x32CD32; // White
 
 /* ===== Physical Memory Manager Initialization from Multiboot ===== */
 void pmm_init_from_multiboot(multiboot_info_t* mbi) {
@@ -110,6 +111,7 @@ void terminal_putchar(char c) {
     if (c == '\n') {
         cursor_x = 0;
         cursor_y += 12;
+        terminal_write("$ ");
         return;
     }
 
@@ -117,7 +119,7 @@ void terminal_putchar(char c) {
         if (cursor_x >= 8) cursor_x -= 8;
         for (int py = 0; py < 8; py++)
             for (int px = 0; px < 8; px++)
-                framebuffer_putpixel(cursor_x + px, cursor_y + py, 0xFFFFFF); // Match background
+                framebuffer_putpixel(cursor_x + px+ fb.width/8 +10, cursor_y + py+fb.height/8 +40, 0x545454); // Match background
         return;
     }
 
@@ -125,7 +127,7 @@ void terminal_putchar(char c) {
     for (int py = 0; py < 8; py++) {
         for (int px = 0; px < 8; px++) {
             if (font8x8_basic[(int)c][py] & (1 << px)) {
-                framebuffer_putpixel(cursor_x + px, cursor_y + py, text_color);
+                framebuffer_putpixel(cursor_x + px + fb.width/8 +10, cursor_y + py+fb.height/8+40, text_color);
             }
         }
     }
@@ -139,7 +141,7 @@ void terminal_putchar(char c) {
 
 /* 3. Mouse Stubs */
 /* 3. Mouse Handlers */
-uint32_t saved_pixel_colors[100]; // To save background pixels
+uint32_t saved_pixel_colors[16*16]; // To save background pixels
 void draw_mouse_cursor(uint32_t x, uint32_t y) {
     // Draws a 5x5 red square
     // for(int i = 0; i < 10; i++) {
@@ -201,8 +203,6 @@ void display_logo() {
     delay_seconds(2);
 
 }
-
-
 void fade_in_logo() {
     for (uint32_t step = 0; step <= 255; step += 5) {
         framebuffer_clear(0x000000);
@@ -331,8 +331,13 @@ void kernel_higher_half_main(void) {
         framebuffer_clear(0x000000); // Match logo background
         background_init();
         window_init();
+        delay_seconds(7); // Wait for 1 second before clearing the screen
+        framebuffer_clear(0x000000);
+        background_init();
     }
 
+    struct terminal_property ter = {fb.width/8,fb.height/8, 600, 800};
+    terminal_init(&ter);
     mouse_init();
     // keyboard_init();  // must call this
     // unmap_identity_safe();

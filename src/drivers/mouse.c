@@ -24,11 +24,11 @@ uint16_t tatsu_cursor[16] = {
     0xFF00, // 1111111100000000
     0xFF80, // 1111111110000000
     0xFEC0, // 1111111011000000
-    0xEC00, // 1110110001100000
-    0xC600, // 1100011000110000
-    0x0300, // 0000001100011000
-    0x0180, // 0000000110001100
-    0x00C0, // 0000000011000110
+    0xEC00, // 1110110000000000
+    0xC600, // 1100011000000000
+    0x0300, // 0000001100000000
+    0x0180, // 0000000110000000
+    0x00C0, // 0000000011000000
     0x0000  // 0000000000000000
 };
 
@@ -55,7 +55,7 @@ void mouse_irq_handler(uint8_t data) {
     mouse_right_button_pressed = (packet[0] & 0x02) != 0;
     mouse_middle_button_pressed = (packet[0] & 0x04) != 0;
     if(mouse_left_button_pressed && !mouse_left_button_prev) {
-        draw_rectangle(&r, fb.width / 2 - r.width / 2, fb.height / 2 - r.height / 2, 0xFF0080, 0.5f);
+        draw_rectangle(&r, fb.width / 2 - r.width / 2, fb.height / 2 - r.height / 2, 0xFF0080,0xFF0080, 0.5f);
         // terminal_write("Mouse Left Button Clicked at ");
         // terminal_write_hex(mouse_x);
         // terminal_write(", ");
