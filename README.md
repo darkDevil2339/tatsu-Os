@@ -40,7 +40,8 @@ The project is written in **C** and **x86 Assembly**, beginning with a custom bo
 * Software Development Kit (SDK) for creating native applications
 
   ### Snapshot
-  <img width="1068" height="783" alt="image" src="https://github.com/user-attachments/assets/61d60378-3807-4359-9fe1-ffc68ad115b6" />
+  <img width="1018" height="760" alt="image" src="https://github.com/user-attachments/assets/101df6be-e7b7-443a-858c-33c208a91320" />
+
 
 
 ### Vision
