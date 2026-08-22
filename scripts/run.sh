@@ -46,6 +46,7 @@ $CC $CFLAGS -I$SRC/include -c $SRC/drivers/heap.c -o $BUILD/heap.o
 $CC $CFLAGS -I$SRC/include -c $SRC/drivers/file_system.c -o $BUILD/filesystem.o
 $CC $CFLAGS -I$SRC/include -c $SRC/drivers/window.c -o $BUILD/window.o
 $CC $CFLAGS -I$SRC/include -c $SRC/drivers/bitmap.c -o $BUILD/bitmap.o
+$CC $CFLAGS -I$SRC/include -c $SRC/drivers/pci.c -o $BUILD/pci.o
 
 # ---------- LINK ----------
 echo "[*] Linking kernel..."
@@ -66,6 +67,7 @@ $LD $LDFLAGS \
     $BUILD/keyboard.o \
     $BUILD/mouse.o \
     $BUILD/ata_pio.o \
+    $BUILD/pci.o \
     $BUILD/heap.o \
     $BUILD/filesystem.o \
     $BUILD/kernel.o \

@@ -139,7 +139,7 @@ void terminal_putchar(char c) {
 
 /* 3. Mouse Stubs */
 /* 3. Mouse Handlers */
-uint32_t saved_pixel_colors[100]; // To save background pixels
+uint32_t saved_pixel_colors[16*16]; // To save background pixels
 void draw_mouse_cursor(uint32_t x, uint32_t y) {
     // Draws a 5x5 red square
     // for(int i = 0; i < 10; i++) {
