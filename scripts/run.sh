@@ -47,6 +47,7 @@ $CC $CFLAGS -I$SRC/include -c $SRC/drivers/file_system.c -o $BUILD/filesystem.o
 $CC $CFLAGS -I$SRC/include -c $SRC/drivers/window.c -o $BUILD/window.o
 $CC $CFLAGS -I$SRC/include -c $SRC/drivers/bitmap.c -o $BUILD/bitmap.o
 $CC $CFLAGS -I$SRC/include -c $SRC/drivers/pci.c -o $BUILD/pci.o
+$CC $CFLAGS -I$SRC/include -c $SRC/drivers/amd_pcnet.c -o $BUILD/amd_pcnet.o
 
 # ---------- LINK ----------
 echo "[*] Linking kernel..."
@@ -68,6 +69,7 @@ $LD $LDFLAGS \
     $BUILD/mouse.o \
     $BUILD/ata_pio.o \
     $BUILD/pci.o \
+    $BUILD/amd_pcnet.o \
     $BUILD/heap.o \
     $BUILD/filesystem.o \
     $BUILD/kernel.o \

@@ -16,6 +16,7 @@
 #include "../include/background.h"
 #include "../include/heap.h"
 #include "../include/window.h"
+#include "../include/amd_pcnet.h"
 
 #define Author "Sachin Kumar"
 
@@ -334,6 +335,7 @@ void kernel_higher_half_main(void) {
     }
 
     mouse_init();
+    pcnet_scan();
     // keyboard_init();  // must call this
     // unmap_identity_safe();
 
