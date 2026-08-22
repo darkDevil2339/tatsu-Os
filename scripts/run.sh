@@ -48,6 +48,7 @@ $CC $CFLAGS -I$SRC/include -c $SRC/drivers/file_system.c -o $BUILD/filesystem.o
 $CC $CFLAGS -I$SRC/include -c $SRC/drivers/terminal.c -o $BUILD/terminal.o
 $CC $CFLAGS -I$SRC/include -c $SRC/drivers/window.c -o $BUILD/window.o
 $CC $CFLAGS -I$SRC/include -c $SRC/drivers/bitmap.c -o $BUILD/bitmap.o
+$CC $CFLAGS -I$SRC/include -c $SRC/drivers/pci.c -o $BUILD/pci.o
 
 
 # ---------- LINK ----------
@@ -69,6 +70,7 @@ $LD $LDFLAGS \
     $BUILD/keyboard.o \
     $BUILD/mouse.o \
     $BUILD/ata_pio.o \
+    $BUILD/pci.o \
     $BUILD/heap.o \
     $BUILD/terminal.o \
     $BUILD/kernel.o \
