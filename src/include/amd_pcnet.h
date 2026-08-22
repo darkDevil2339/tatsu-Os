@@ -1,6 +1,6 @@
 #ifndef AMD_PCNET_H
 #define AMD_PCNET_H
-
-// AMD PCNet driver declarations
+#include <stdint.h>
+void pcnet_scan(void);
 
 #endif // AMD_PCNET_H

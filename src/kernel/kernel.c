@@ -16,7 +16,11 @@
 #include "../include/background.h"
 #include "../include/heap.h"
 #include "../include/window.h"
+<<<<<<< HEAD
 #include "../include/terminal.h"
+=======
+#include "../include/amd_pcnet.h"
+>>>>>>> dev
 
 #define Author "Sachin Kumar"
 
@@ -339,6 +343,7 @@ void kernel_higher_half_main(void) {
     struct terminal_property ter = {fb.width/8,fb.height/8, 600, 800};
     terminal_init(&ter);
     mouse_init();
+    pcnet_scan();
     // keyboard_init();  // must call this
     // unmap_identity_safe();
 
