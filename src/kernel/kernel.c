@@ -16,11 +16,7 @@
 #include "../include/background.h"
 #include "../include/heap.h"
 #include "../include/window.h"
-<<<<<<< HEAD
-#include "../include/terminal.h"
-=======
 #include "../include/amd_pcnet.h"
->>>>>>> dev
 
 #define Author "Sachin Kumar"
 
@@ -339,9 +335,7 @@ void kernel_higher_half_main(void) {
         framebuffer_clear(0x000000);
         background_init();
     }
-
-    struct terminal_property ter = {fb.width/8,fb.height/8, 600, 800};
-    terminal_init(&ter);
+    // terminal_init((struct terminal_property){.x = 10, .y = 10, .width = 300, .height = 200});
     mouse_init();
     pcnet_scan();
     // keyboard_init();  // must call this
