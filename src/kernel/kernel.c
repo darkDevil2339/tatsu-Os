@@ -337,7 +337,7 @@ void kernel_higher_half_main(void) {
     }
     // terminal_init((struct terminal_property){.x = 10, .y = 10, .width = 300, .height = 200});
     mouse_init();
-    pcnet_scan();
+    pcnet_init(); // Initialize AMD PCnet driver
     // keyboard_init();  // must call this
     // unmap_identity_safe();
 
