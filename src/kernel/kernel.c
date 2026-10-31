@@ -54,9 +54,13 @@ void pmm_init_from_multiboot(multiboot_info_t* mbi) {
             uint64_t start = mmap->addr;
             uint64_t end   = mmap->addr + mmap->len;
 
-            // Align to PMM block size
-            if (start % PMM_BLOCK_SIZE)
-                start += PMM_BLOCK_SIZE - (start % PMM_BLOCK_SIZE);
+            // // Align to PMM block size
+            // if (start % PMM_BLOCK_SIZE)
+            //     start += PMM_BLOCK_SIZE - (start % PMM_BLOCK_SIZE);
+            // Align start UP to the next 4 KB boundary
+            start = (start + PMM_BLOCK_SIZE - 1) & ~(uint64_t)(PMM_BLOCK_SIZE - 1);
+            // Align end DOWN to the previous 4 KB boundary
+            end = end & ~(uint64_t)(PMM_BLOCK_SIZE - 1);
 
             for (uint64_t addr = start;
                  addr < end;
@@ -345,9 +349,41 @@ void kernel_higher_half_main(void) {
     // terminal_write_hex((uint32_t)fb.address);
     // terminal_write("\n");
     terminal_write("Sachin OS: Higher Half Boot Successful\n> ");
-    int a = 5;
-    int *p = &a;
-    terminal_write_hex(p);
+    dma_region_t region, a, b;
+    if (!dma_alloc_page(&region)) {
+        terminal_write("DMA allocation failed");
+    }
+    volatile uint32_t *test = (volatile uint32_t *)region.virt;
+
+    test[0] = 0xDEADBEEF;
+
+    if (test[0] == 0xDEADBEEF) {
+        terminal_write("DMA memory test passed");
+        terminal_write("\n");
+    }
+    dma_alloc_page(&a);
+    dma_alloc_page(&b);
+    terminal_write("physical address 1: ");
+    terminal_write_hex(region.phys);
+    terminal_write("\n");
+    terminal_write("virtual address 1: ");
+    terminal_write_hex((uint32_t)region.virt);
+    terminal_write("\n");
+    terminal_write("physical address 2: ");
+    terminal_write_hex(a.phys);
+    terminal_write("\n");
+    terminal_write("virtual address 2: ");
+    terminal_write_hex((uint32_t)a.virt);
+    terminal_write("\n");
+    terminal_write("physical address 3: ");
+    terminal_write_hex(b.phys);
+    terminal_write("\n");
+    terminal_write("virtual address 3: ");
+    terminal_write_hex((uint32_t)b.virt);
+    
+    // int a = 5;
+    // int *p = &a;
+    // terminal_write_hex(p);
     // void* ptr = kmalloc(sizeof(struct fs));
     // // void* read_back_ptr = kmalloc(sizeof(struct fs));
     // if (ptr) {

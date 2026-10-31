@@ -1,6 +1,7 @@
 #include "../include/pci.h"
 #include "../include/amd_pcnet.h"
 #include "../include/pmm.h"
+#include "../include/vmm.h"
 
 extern void terminal_write(const char* s);
 extern void terminal_write_hex(uint32_t n);
@@ -14,9 +15,30 @@ uint32_t init_block_phys;
 uint32_t * rx_ring_virt;
 uint32_t * tx_ring_virt;
 uint32_t * init_block_virt;
-
-void dma_allocator(dma_region_t *ptr){
-    ptr->phys = pmm_alloc_block();
+static uint32_t dma_next_virt = DMA_VIRT_START;
+int dma_alloc_page(dma_region_t *ptr){
+    if(!ptr){
+        return 0;
+    }
+    if (dma_next_virt > DMA_VIRT_END - DMA_PAGE_SIZE)
+    return 0;
+    ptr->phys = (uint32_t) pmm_alloc_block();
+    if(!ptr->phys){
+        return 0;
+    }
+    vmm_map_page((void*)dma_next_virt,(void *)ptr->phys,VMM_WRITABLE);
+    ptr->virt = (void *)dma_next_virt;
+    ptr->size = DMA_PAGE_SIZE;
+    if(vmm_get_phys(ptr->virt) != ptr->phys){
+        vmm_unmap_page(ptr->virt);
+        pmm_free_block((void *)ptr->phys);
+        ptr->phys = 0;
+        ptr->size = 0;
+        ptr->virt = NULL;
+        return 0;
+    }
+    dma_next_virt += DMA_PAGE_SIZE;
+    return 1;
 }
 static uint16_t pcnet_read_bcr(uint16_t bcr){
     outw(pcnet_io_base+0x12,bcr);
@@ -62,6 +84,7 @@ void pcnet_scan(void)
                     pcnet_init_device(bus, slot);
                     terminal_write("\n");
                     pcnet_write_bcr(20, 0x0102);
+                    
 
                 }
             }

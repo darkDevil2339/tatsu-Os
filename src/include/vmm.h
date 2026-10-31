@@ -10,8 +10,11 @@
 #define VMM_USER 0x04
 #define PAGE_SIZE 4096
 #define KERNEL_VIRT_BASE 0xC0000000
+#define RECURSIVE_PT_BASE 0xFFC00000
+#define RECURSIVE_PD      0xFFFFF000
 
 void vmm_map_page(void* virtual_addr, void* physical_addr, uint32_t flags);
 void vmm_unmap_page(void* virtual_addr);
+uint32_t vmm_get_phys(void* virtual_addr);
 
 #endif

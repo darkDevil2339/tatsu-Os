@@ -25,6 +25,11 @@
 
 #define PCNET_RX_COUNT 8
 #define PCNET_TX_COUNT 8
+#define RECURSIVE_PT_BASE 0xFFC00000
+#define RECURSIVE_PD      0xFFFFF000
+#define DMA_VIRT_START 0xD0000000
+#define DMA_VIRT_END   0xD1000000
+#define DMA_PAGE_SIZE  4096
 
 typedef struct
 {
@@ -78,5 +83,5 @@ struct pcnet_init_block
 void pcnet_scan(void);
 void pcnet_init(void);
 void pcnet_init_device(uint8_t bus, uint8_t slot);
-void dma_allocator(dma_region_t *ptr);
+int dma_alloc_page(dma_region_t *ptr);
 #endif // AMD_PCNET_H
