@@ -49,6 +49,9 @@ void vmm_map_page(void* virtual_addr, void* physical_addr, uint32_t flags) {
         (uint32_t*)(page_directory[pd_idx] & PAGE_MASK);
 
     // 4️⃣ Install page mapping
+    if (page_table[pt_idx] & VMM_PRESENT) {
+        return;
+    }
     page_table[pt_idx] =
         (pa & PAGE_MASK) | flags | VMM_PRESENT;
 
@@ -101,3 +104,4 @@ uint32_t vmm_get_phys(void* virtual_addr) {
 
     return (page_table[pt_idx] & PAGE_MASK) + offset;
 }
+

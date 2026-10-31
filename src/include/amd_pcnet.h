@@ -26,6 +26,13 @@
 #define PCNET_RX_COUNT 8
 #define PCNET_TX_COUNT 8
 
+typedef struct
+{
+    uint32_t phys;
+    void *virt;
+    uint32_t size;
+} dma_region_t;
+
 struct pcnet_rx_desc
 {
     uint32_t addr;
@@ -70,6 +77,6 @@ struct pcnet_init_block
 
 void pcnet_scan(void);
 void pcnet_init(void);
-
 void pcnet_init_device(uint8_t bus, uint8_t slot);
+void dma_allocator(dma_region_t *ptr);
 #endif // AMD_PCNET_H

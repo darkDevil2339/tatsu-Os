@@ -344,7 +344,10 @@ void kernel_higher_half_main(void) {
     // terminal_write("Framebuffer at: ");
     // terminal_write_hex((uint32_t)fb.address);
     // terminal_write("\n");
-    // terminal_write("Sachin OS: Higher Half Boot Successful\n> ");
+    terminal_write("Sachin OS: Higher Half Boot Successful\n> ");
+    int a = 5;
+    int *p = &a;
+    terminal_write_hex(p);
     // void* ptr = kmalloc(sizeof(struct fs));
     // // void* read_back_ptr = kmalloc(sizeof(struct fs));
     // if (ptr) {

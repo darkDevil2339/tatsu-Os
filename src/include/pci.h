@@ -6,4 +6,5 @@ uint16_t pciConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offs
 uint16_t pcicheckvendor(uint8_t bus, uint8_t slot);
 uint32_t pciConfigReadDword(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
 void pciConfigWriteDword(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, uint32_t data);
+void pciConfigWriteword(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, uint32_t data);
 #endif

@@ -5,17 +5,8 @@
 extern void terminal_write(const char* s);
 extern void terminal_write_hex(uint32_t n);
 
-// Forward declaration of the internal init step
 void pcnet_init_device(uint8_t bus, uint8_t slot);
 static uint32_t pcnet_io_base;
-static struct pcnet_rx_desc rx_ring[PCNET_RX_COUNT]
-    __attribute__((aligned(16)));
-
-static struct pcnet_tx_desc tx_ring[PCNET_TX_COUNT]
-    __attribute__((aligned(16)));
-
-static struct pcnet_init_block init_block
-    __attribute__((aligned(16)));
 
 uint32_t rx_ring_phys;
 uint32_t tx_ring_phys;
@@ -24,12 +15,13 @@ uint32_t * rx_ring_virt;
 uint32_t * tx_ring_virt;
 uint32_t * init_block_virt;
 
-static void pcnet_write_csr(uint16_t csr, uint16_t value)
-{
-    outw(pcnet_io_base + 0x12, csr);   // RAP
-    outw(pcnet_io_base + 0x10, value); // RDP
+void dma_allocator(dma_region_t *ptr){
+    ptr->phys = pmm_alloc_block();
 }
-
+static uint16_t pcnet_read_bcr(uint16_t bcr){
+    outw(pcnet_io_base+0x12,bcr);
+    return inw(pcnet_io_base+0x16);
+}
 static uint16_t pcnet_read_csr(uint16_t csr)
 {
     outw(pcnet_io_base + 0x12, csr);   // RAP
@@ -41,72 +33,6 @@ static void pcnet_write_bcr(uint16_t bcr, uint16_t value)
     outw(pcnet_io_base + 0x16, value); // BDP
 }
 
-static uint16_t pcnet_read_bcr(uint16_t bcr)
-{
-    outw(pcnet_io_base + 0x12, bcr);   // RAP
-    return inw(pcnet_io_base + 0x16);  // BDP
-}
-static void pcnet_setup_init_block(
-    uint32_t rx_ring_phys,
-    uint32_t tx_ring_phys)
-{
-    init_block.mode = 0;
-
-    init_block.tlen_rlen =
-        (3 << 12) |   // TX = 8 descriptors
-        (3 << 8);     // RX = 8 descriptors
-
-    /*
-     * Example MAC.
-     * Later we should obtain the real MAC from the PCnet/EEPROM.
-     */
-    init_block.phys_addr[0] = 0x52;
-    init_block.phys_addr[1] = 0x54;
-    init_block.phys_addr[2] = 0x00;
-    init_block.phys_addr[3] = 0x12;
-    init_block.phys_addr[4] = 0x34;
-    init_block.phys_addr[5] = 0x56;
-
-    init_block.reserved = 0;
-
-    init_block.filter[0] = 0;
-    init_block.filter[1] = 0;
-
-    init_block.rx_ring = rx_ring_phys;
-    init_block.tx_ring = tx_ring_phys;
-    init_block_phys = pmm_alloc_block();
-}
-static void pcnet_setup_rx_ring(uint32_t rx_buffer_phys[])
-{
-    for (int i = 0; i < PCNET_RX_COUNT; i++)
-    {
-        rx_ring[i].addr = rx_buffer_phys[i];
-
-        /*
-         * PCnet uses two's-complement buffer length.
-         */
-        rx_ring[i].length = -PCNET_BUFFER_SIZE;
-
-        /*
-         * Give descriptor to PCnet.
-         */
-        rx_ring[i].status = 0x8000;
-
-        rx_ring[i].msg_length = 0;
-        rx_ring[i].reserved = 0;
-    }
-}
-static void pcnet_setup_tx_ring(void)
-{
-    for (int i = 0; i < PCNET_TX_COUNT; i++)
-    {
-        tx_ring[i].addr = 0;
-        tx_ring[i].length = 0;
-        tx_ring[i].status = 0;
-        tx_ring[i].misc = 0;
-        tx_ring[i].reserved = 0;
-    }
-}
 void pcnet_scan(void)
 {
     for (int bus = 0; bus < 256; bus++)
@@ -134,6 +60,9 @@ void pcnet_scan(void)
                     
                     // Initialize the specific hardware instance found
                     pcnet_init_device(bus, slot);
+                    terminal_write("\n");
+                    pcnet_write_bcr(20, 0x0102);
+
                 }
             }
         }
@@ -157,15 +86,11 @@ void pcnet_init_device(uint8_t bus, uint8_t slot)
     terminal_write("AMD PCnet I/O Base Address: ");
     terminal_write_hex(actual_io_port);
     terminal_write("\n");
-    uint32_t conf = pciConfigReadDword(bus, slot, 0, 0x04);
+    uint16_t command = pciConfigReadWord(bus, slot, 0, 0x04);
+    command |= (1 << 0); // I/O Space Enable
+    command |= (1 << 2); // Bus Master Enable
+    pciConfigWriteword(bus, slot, 0, 0x04, command);
 
-    conf |= 0x00000005;  // Enable I/O Space + Bus Mastering
-
-    pciConfigWriteDword(bus, slot, 0, 0x04, conf);
-
-    // Next step: Enable Bus Mastering and I/O Space in the PCI Command Register
-    // uint16_t command = pciConfigReadWord(bus, slot, 0, 0x04);
-    // pciConfigWriteWord(bus, slot, 0, 0x04, command | 0x05); 
     uint16_t reset = inw(actual_io_port + 0x14);
     terminal_write("AMD PCnet Reset Register Value: ");
     terminal_write_hex(reset);
@@ -175,7 +100,19 @@ void pcnet_init_device(uint8_t bus, uint8_t slot)
     terminal_write_hex(csr0);
     terminal_write("\n");
     terminal_write_hex(csr0);
+
     pcnet_write_bcr(20, 0x0102);
+    uint16_t style = pcnet_read_bcr(20);
+    terminal_write("BCR20: ");
+    terminal_write_hex(style);
+    terminal_write("\n");
+
+    if ((style & 0xFF) == 0x02 &&
+        (style & 0x0300) == 0x0300) {
+        terminal_write("PCnet-32 software style verified!\n");
+    } else {
+        terminal_write("PCnet software style verification failed!\n");
+    }
 }
 
 void pcnet_init(void)
