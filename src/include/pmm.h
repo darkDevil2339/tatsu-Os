@@ -13,5 +13,6 @@ void pmm_mark_used(uint32_t addr);
 void pmm_mark_free(uint32_t addr);
 void* pmm_alloc_block();
 void pmm_free_block(void* addr);
+void pmm_reserve_region(uint32_t start, uint32_t end);
 
 #endif

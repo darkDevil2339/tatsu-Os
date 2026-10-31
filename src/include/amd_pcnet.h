@@ -30,6 +30,13 @@
 #define DMA_VIRT_START 0xD0000000
 #define DMA_VIRT_END   0xD1000000
 #define DMA_PAGE_SIZE  4096
+#define PCNET_RX_RING_SIZE 16
+#define PCNET_TX_RING_SIZE 8
+#define PCNET_RX_BUFFER_SIZE 1536
+#define PCNET_TX_STP  0x0200
+#define PCNET_TX_ENP  0x0100
+#define PCNET_DESC_OWN 0x8000
+
 
 typedef struct
 {
@@ -38,37 +45,27 @@ typedef struct
     uint32_t size;
 } dma_region_t;
 
-struct pcnet_rx_desc
-{
+struct pcnet_rx_desc {
     uint32_t addr;
-    int16_t  length;
+    uint16_t length;
     uint16_t status;
     uint32_t msg_length;
     uint32_t reserved;
-} __attribute__((packed));
+} __attribute__((packed, aligned(16)));
 
-struct pcnet_tx_desc
-{
+struct pcnet_tx_desc {
     uint32_t addr;
-    int16_t  length;
+    uint16_t length;
     uint16_t status;
     uint32_t misc;
     uint32_t reserved;
-} __attribute__((packed));
-
+} __attribute__((packed, aligned(16)));
 struct pcnet_init_block
 {
     uint16_t mode;
 
-    /*
-     * Bits:
-     *
-     * 15-12 = TLEN
-     * 11-8  = RLEN
-     * 7-0   = reserved
-     */
-
-    uint16_t tlen_rlen;
+    uint8_t tlen;
+    uint8_t rlen;
 
     uint8_t phys_addr[6];
 
@@ -80,8 +77,13 @@ struct pcnet_init_block
     uint32_t tx_ring;
 } __attribute__((packed));
 
+typedef struct __attribute__((aligned(16))) {
+    struct pcnet_rx_desc rx[PCNET_RX_RING_SIZE];
+    struct pcnet_tx_desc tx[PCNET_TX_RING_SIZE];
+} pcnet_dma_layout_t;
+
 void pcnet_scan(void);
 void pcnet_init(void);
-void pcnet_init_device(uint8_t bus, uint8_t slot);
+int pcnet_init_device(uint8_t bus, uint8_t slot);
 int dma_alloc_page(dma_region_t *ptr);
 #endif // AMD_PCNET_H

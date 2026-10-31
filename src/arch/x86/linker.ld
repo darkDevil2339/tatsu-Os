@@ -28,7 +28,6 @@ SECTIONS
         *(.bss)
     }
 
-    __kernel_end = .;    /* end of kernel */
 
     .stack BLOCK(4K) : ALIGN(4K)
     {
@@ -36,4 +35,5 @@ SECTIONS
         . += 16K;          /* 16 KB stack size */
         stack_end = .;     /* symbol for stack end */
     }
+    __kernel_end = .;    /* end of kernel */
 }

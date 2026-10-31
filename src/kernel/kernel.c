@@ -35,6 +35,7 @@ extern uint32_t multiboot_magic;
 extern uint32_t __kernel_start;
 extern uint32_t __kernel_end;
 extern uint32_t page_directory[1024];
+extern uint32_t first_page_table[1024];
 
 /* Full 8x8 font bitmap */
 extern char font8x8_basic[128][8]; 
@@ -44,6 +45,7 @@ uint32_t cursor_y = 0;
 uint32_t text_color = 0x32CD32; // White
 
 /* ===== Physical Memory Manager Initialization from Multiboot ===== */
+
 void pmm_init_from_multiboot(multiboot_info_t* mbi) {
     multiboot_mmap_entry_t* mmap =
         (multiboot_mmap_entry_t*)mbi->mmap_addr;
@@ -90,6 +92,16 @@ void pmm_init_from_multiboot(multiboot_info_t* mbi) {
          addr += PMM_BLOCK_SIZE) {
         pmm_mark_used(addr);
     }
+    // Reserve the first 1 MB of physical memory
+    for (uint32_t addr = 0x00000000;
+         addr < 0x00100000;
+         addr += PMM_BLOCK_SIZE) {
+        pmm_mark_used(addr);
+    }
+    pmm_reserve_region((uint32_t)mbi, (uint32_t)mbi + sizeof(multiboot_info_t));
+    pmm_reserve_region(mbi->mmap_addr,mbi->mmap_addr + mbi->mmap_length);
+    pmm_reserve_region((uint32_t)page_directory,(uint32_t)page_directory+4096);
+    pmm_reserve_region((uint32_t)first_page_table,(uint32_t)first_page_table+4096);
 }
 
 
@@ -349,37 +361,6 @@ void kernel_higher_half_main(void) {
     // terminal_write_hex((uint32_t)fb.address);
     // terminal_write("\n");
     terminal_write("Sachin OS: Higher Half Boot Successful\n> ");
-    dma_region_t region, a, b;
-    if (!dma_alloc_page(&region)) {
-        terminal_write("DMA allocation failed");
-    }
-    volatile uint32_t *test = (volatile uint32_t *)region.virt;
-
-    test[0] = 0xDEADBEEF;
-
-    if (test[0] == 0xDEADBEEF) {
-        terminal_write("DMA memory test passed");
-        terminal_write("\n");
-    }
-    dma_alloc_page(&a);
-    dma_alloc_page(&b);
-    terminal_write("physical address 1: ");
-    terminal_write_hex(region.phys);
-    terminal_write("\n");
-    terminal_write("virtual address 1: ");
-    terminal_write_hex((uint32_t)region.virt);
-    terminal_write("\n");
-    terminal_write("physical address 2: ");
-    terminal_write_hex(a.phys);
-    terminal_write("\n");
-    terminal_write("virtual address 2: ");
-    terminal_write_hex((uint32_t)a.virt);
-    terminal_write("\n");
-    terminal_write("physical address 3: ");
-    terminal_write_hex(b.phys);
-    terminal_write("\n");
-    terminal_write("virtual address 3: ");
-    terminal_write_hex((uint32_t)b.virt);
     
     // int a = 5;
     // int *p = &a;

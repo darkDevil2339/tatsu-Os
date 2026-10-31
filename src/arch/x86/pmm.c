@@ -70,3 +70,17 @@ void* pmm_alloc_block(void) {
 void pmm_free_block(void* addr) {
     pmm_mark_free((uint32_t)addr);
 }
+void pmm_reserve_region(uint32_t start, uint32_t end) {
+    uint32_t aligned_start =
+        start & ~(PMM_BLOCK_SIZE - 1);
+
+    uint32_t aligned_end =
+        (end + PMM_BLOCK_SIZE - 1) &
+        ~(PMM_BLOCK_SIZE - 1);
+
+    for (uint32_t addr = aligned_start;
+         addr < aligned_end;
+         addr += PMM_BLOCK_SIZE) {
+        pmm_mark_used(addr);
+    }
+}
