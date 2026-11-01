@@ -23,7 +23,7 @@
 /* ===== Forward declarations ===== */
 void gdt_init(void);
 void idt_init(void);
-void terminal_write(const char* s);
+void terminal_write(const char *s);
 void terminal_putchar(char c);
 void execute_command(const char *input, int arg_int, char *arg_str);
 void mouse_init(void);
@@ -38,7 +38,7 @@ extern uint32_t page_directory[1024];
 extern uint32_t first_page_table[1024];
 
 /* Full 8x8 font bitmap */
-extern char font8x8_basic[128][8]; 
+extern char font8x8_basic[128][8];
 
 uint32_t cursor_x = 0;
 uint32_t cursor_y = 0;
@@ -46,15 +46,18 @@ uint32_t text_color = 0x32CD32; // White
 
 /* ===== Physical Memory Manager Initialization from Multiboot ===== */
 
-void pmm_init_from_multiboot(multiboot_info_t* mbi) {
-    multiboot_mmap_entry_t* mmap =
-        (multiboot_mmap_entry_t*)mbi->mmap_addr;
+void pmm_init_from_multiboot(multiboot_info_t *mbi)
+{
+    multiboot_mmap_entry_t *mmap =
+        (multiboot_mmap_entry_t *)mbi->mmap_addr;
 
-    while ((uint32_t)mmap < mbi->mmap_addr + mbi->mmap_length) {
+    while ((uint32_t)mmap < mbi->mmap_addr + mbi->mmap_length)
+    {
 
-        if (mmap->type == 1) { // USABLE RAM
+        if (mmap->type == 1)
+        { // USABLE RAM
             uint64_t start = mmap->addr;
-            uint64_t end   = mmap->addr + mmap->len;
+            uint64_t end = mmap->addr + mmap->len;
 
             // // Align to PMM block size
             // if (start % PMM_BLOCK_SIZE)
@@ -66,90 +69,104 @@ void pmm_init_from_multiboot(multiboot_info_t* mbi) {
 
             for (uint64_t addr = start;
                  addr < end;
-                 addr += PMM_BLOCK_SIZE) {
+                 addr += PMM_BLOCK_SIZE)
+            {
 
                 pmm_mark_free((uint32_t)addr);
             }
         }
 
-        mmap = (multiboot_mmap_entry_t*)
-            ((uint32_t)mmap + mmap->size + sizeof(uint32_t));
+        mmap = (multiboot_mmap_entry_t *)((uint32_t)mmap + mmap->size + sizeof(uint32_t));
     }
 
     // 1 Mark kernel as USED
     for (uint32_t addr = (uint32_t)&__kernel_start;
          addr < (uint32_t)&__kernel_end;
-         addr += PMM_BLOCK_SIZE) {
+         addr += PMM_BLOCK_SIZE)
+    {
         pmm_mark_used(addr);
     }
 
     // 2️ Mark PMM bitmap itself as USED
     uint32_t bitmap_start = (uint32_t)pmm_bitmap;
-    uint32_t bitmap_end   = bitmap_start + pmm_bitmap_size;
+    uint32_t bitmap_end = bitmap_start + pmm_bitmap_size;
 
     for (uint32_t addr = bitmap_start;
          addr < bitmap_end;
-         addr += PMM_BLOCK_SIZE) {
+         addr += PMM_BLOCK_SIZE)
+    {
         pmm_mark_used(addr);
     }
     // Reserve the first 1 MB of physical memory
     for (uint32_t addr = 0x00000000;
          addr < 0x00100000;
-         addr += PMM_BLOCK_SIZE) {
+         addr += PMM_BLOCK_SIZE)
+    {
         pmm_mark_used(addr);
     }
     pmm_reserve_region((uint32_t)mbi, (uint32_t)mbi + sizeof(multiboot_info_t));
-    pmm_reserve_region(mbi->mmap_addr,mbi->mmap_addr + mbi->mmap_length);
-    pmm_reserve_region((uint32_t)page_directory,(uint32_t)page_directory+4096);
-    pmm_reserve_region((uint32_t)first_page_table,(uint32_t)first_page_table+4096);
+    pmm_reserve_region(mbi->mmap_addr, mbi->mmap_addr + mbi->mmap_length);
+    pmm_reserve_region((uint32_t)page_directory, (uint32_t)page_directory + 4096);
+    pmm_reserve_region((uint32_t)first_page_table, (uint32_t)first_page_table + 4096);
 }
 
-
 /* 1. Added terminal_write  */
-void terminal_write_hex(uint32_t n) {
+void terminal_write_hex(uint32_t n)
+{
     char hex_chars[] = "0123456789ABCDEF";
     char buffer[9];
     buffer[8] = '\0';
-    for (int i = 7; i >= 0; i--) {
+    for (int i = 7; i >= 0; i--)
+    {
         buffer[i] = hex_chars[n & 0xF];
         n >>= 4;
     }
     terminal_write(buffer);
 }
-void terminal_write(const char* s) {
-    for (size_t i = 0; s[i] != '\0'; i++) {
+void terminal_write(const char *s)
+{
+    for (size_t i = 0; s[i] != '\0'; i++)
+    {
         terminal_putchar(s[i]);
     }
 }
 
 /* 2.  terminal_putchar logic */
-void terminal_putchar(char c) {
-    if (c == '\n') {
+void terminal_putchar(char c)
+{
+    if (c == '\n')
+    {
         cursor_x = 0;
         cursor_y += 12;
         terminal_write("$ ");
         return;
     }
 
-    if (c == '\b') {
-        if (cursor_x >= 8) cursor_x -= 8;
+    if (c == '\b')
+    {
+        if (cursor_x >= 8)
+            cursor_x -= 8;
         for (int py = 0; py < 8; py++)
             for (int px = 0; px < 8; px++)
-                framebuffer_putpixel(cursor_x + px+ fb.width/8 +10, cursor_y + py+fb.height/8 +40, 0x545454); // Match background
+                framebuffer_putpixel(cursor_x + px + fb.width / 8 + 10, cursor_y + py + fb.height / 8 + 40, 0x545454); // Match background
         return;
     }
 
     // Draw character: bits are usually stored most-significant-bit first (left-to-right)
-    for (int py = 0; py < 8; py++) {
-        for (int px = 0; px < 8; px++) {
-            if (font8x8_basic[(int)c][py] & (1 << px)) {
-                framebuffer_putpixel(cursor_x + px + fb.width/8 +10, cursor_y + py+fb.height/8+40, text_color);
+    for (int py = 0; py < 8; py++)
+    {
+        for (int px = 0; px < 8; px++)
+        {
+            if (font8x8_basic[(int)c][py] & (1 << px))
+            {
+                framebuffer_putpixel(cursor_x + px + fb.width / 8 + 10, cursor_y + py + fb.height / 8 + 40, text_color);
             }
         }
     }
 
     cursor_x += 8;
-    if (cursor_x + 8 > fb.width) {
+    if (cursor_x + 8 > fb.width)
+    {
         cursor_x = 0;
         cursor_y += 12;
     }
@@ -157,27 +174,35 @@ void terminal_putchar(char c) {
 
 /* 3. Mouse Stubs */
 /* 3. Mouse Handlers */
-uint32_t saved_pixel_colors[16*16]; // To save background pixels
-void draw_mouse_cursor(uint32_t x, uint32_t y) {
+uint32_t saved_pixel_colors[16 * 16]; // To save background pixels
+void draw_mouse_cursor(uint32_t x, uint32_t y)
+{
     // Draws a 5x5 red square
     // for(int i = 0; i < 10; i++) {
     //     for(int j = 0; j <= i+1; j++) {
     //         // Ensure we don't draw off-screen to avoid crashes
     //         if ((x + i) < fb.width && (y + j) < fb.height) {
     //             read_pixel(x+i, y+j, &saved_pixel_colors[i * 10 + j]);
-    //             framebuffer_putpixel(x + i, y + j, 0x00363D); 
+    //             framebuffer_putpixel(x + i, y + j, 0x00363D);
     //         }
     //     }
     // }
-    for (int i = 0; i < 16; i++) {
-        for (int j = 0; j < 16; j++) {
-            if (tatsu_cursor[i] & (1 << (15 - j))) { // Check if the pixel is ON
+    for (int i = 0; i < 16; i++)
+    {
+        for (int j = 0; j < 16; j++)
+        {
+            if (tatsu_cursor[i] & (1 << (15 - j)))
+            { // Check if the pixel is ON
                 // Ensure we don't draw off-screen to avoid crashes
-                if ((x + j) < fb.width && (y + i) < fb.height) {
+                if ((x + j) < fb.width && (y + i) < fb.height)
+                {
                     read_pixel(x + j, y + i, &saved_pixel_colors[i * 16 + j]);
-                    if (saved_pixel_colors[i * 16 + j] == 0xFFFFFF) {
+                    if (saved_pixel_colors[i * 16 + j] == 0xFFFFFF)
+                    {
                         framebuffer_putpixel(x + j, y + i, 0x000000); // Draw cursor pixel
-                    } else {
+                    }
+                    else
+                    {
                         framebuffer_putpixel(x + j, y + i, 0xFFFFFF); // Draw cursor pixel
                     }
                     // framebuffer_putpixel(x + j, y + i, 0xFFFFFF); // Draw cursor pixel
@@ -187,7 +212,8 @@ void draw_mouse_cursor(uint32_t x, uint32_t y) {
     }
 }
 
-void erase_mouse_cursor(uint32_t x, uint32_t y) {
+void erase_mouse_cursor(uint32_t x, uint32_t y)
+{
     // IMPORTANT: This must match  background color exactly.
     // for(int i = 0; i < 10; i++) {
     //     for(int j = 0; j <= i+1; j++) {
@@ -196,10 +222,14 @@ void erase_mouse_cursor(uint32_t x, uint32_t y) {
     //         }
     //     }
     // }
-    for (int i = 0; i < 16; i++) {
-        for (int j = 0; j < 16; j++) {
-            if (tatsu_cursor[i] & (1 << (15 - j))) { // Check if the pixel is ON
-                if ((x + j) < fb.width && (y + i) < fb.height) {
+    for (int i = 0; i < 16; i++)
+    {
+        for (int j = 0; j < 16; j++)
+        {
+            if (tatsu_cursor[i] & (1 << (15 - j)))
+            { // Check if the pixel is ON
+                if ((x + j) < fb.width && (y + i) < fb.height)
+                {
                     framebuffer_putpixel(x + j, y + i, saved_pixel_colors[i * 16 + j]);
                 }
             }
@@ -208,25 +238,33 @@ void erase_mouse_cursor(uint32_t x, uint32_t y) {
 }
 
 /* 4. Boot Logo */
-void delay_seconds(uint32_t seconds) {
-    for (uint32_t s = 0; s < seconds; s++) {
-        for (volatile uint32_t i = 0; i < 50000000; i++);
+void delay_seconds(uint32_t seconds)
+{
+    for (uint32_t s = 0; s < seconds; s++)
+    {
+        for (volatile uint32_t i = 0; i < 50000000; i++)
+            ;
     }
 }
 
-void display_logo() {
+void display_logo()
+{
     fade_in_logo();
     delay_seconds(2);
-
 }
-void fade_in_logo() {
-    for (uint32_t step = 0; step <= 255; step += 5) {
+void fade_in_logo()
+{
+    for (uint32_t step = 0; step <= 255; step += 5)
+    {
         framebuffer_clear(0x000000);
 
-        for (uint32_t y = 0; y < logo_height; y++) {
-            for (uint32_t x = 0; x < logo_width; x++) {
+        for (uint32_t y = 0; y < logo_height; y++)
+        {
+            for (uint32_t x = 0; x < logo_width; x++)
+            {
                 uint32_t color = logoPixels[y * logo_width + x];
-                if (color == 0x000000) continue;
+                if (color == 0x000000)
+                    continue;
 
                 uint8_t r = (color >> 16) & 0xFF;
                 uint8_t g = (color >> 8) & 0xFF;
@@ -239,20 +277,24 @@ void fade_in_logo() {
                 framebuffer_putpixel(
                     (fb.width - logo_width) / 2 + x,
                     (fb.height - logo_height) / 2 + y,
-                    (r << 16) | (g << 8) | b
-                );
+                    (r << 16) | (g << 8) | b);
             }
         }
 
-        delay_seconds(1);  // smooth fade
+        delay_seconds(1); // smooth fade
     }
 }
-void background_init() {
-    for(uint32_t step = 0; step <= 255; step += 5) {
-        for (uint32_t y = 0; y < bg_height; y++) {
-            for (uint32_t x = 0; x < bg_width; x++) {
+void background_init()
+{
+    for (uint32_t step = 0; step <= 255; step += 5)
+    {
+        for (uint32_t y = 0; y < bg_height; y++)
+        {
+            for (uint32_t x = 0; x < bg_width; x++)
+            {
                 uint32_t color = bgPixels[y * bg_width + x];
-                if (color == 0x000000) continue;
+                if (color == 0x000000)
+                    continue;
 
                 uint8_t r = (color >> 16) & 0xFF;
                 uint8_t g = (color >> 8) & 0xFF;
@@ -265,30 +307,30 @@ void background_init() {
                 framebuffer_putpixel(
                     (fb.width - bg_width) / 2 + x,
                     (fb.height - bg_height) / 2 + y,
-                    (r << 16) | (g << 8) | b
-                );
+                    (r << 16) | (g << 8) | b);
             }
         }
-        delay_seconds(1);  // smooth fade
+        delay_seconds(1); // smooth fade
     }
 }
 
-static inline void flush_tlb(void) {
-    asm volatile (
+static inline void flush_tlb(void)
+{
+    asm volatile(
         "mov %%cr3, %%eax\n"
         "mov %%eax, %%cr3\n"
         :
         :
-        : "eax"
-    );
+        : "eax");
 }
 
 #define PAGE_DIR_VADDR 0xFFFFF000
 
-void unmap_identity_safe(void) {
+void unmap_identity_safe(void)
+{
     asm volatile("cli");
 
-    uint32_t* pd = (uint32_t*)PAGE_DIR_VADDR;
+    uint32_t *pd = (uint32_t *)PAGE_DIR_VADDR;
 
     // Keep first PD entry (0x0 - 4MB) for I/O, terminal globals
     for (int i = 1; i < 1024; i++)
@@ -300,18 +342,17 @@ void unmap_identity_safe(void) {
     asm volatile("sti");
 }
 
-
-
-void kernel_main(void) {
+void kernel_main(void)
+{
     gdt_init();
-    framebuffer_init((multiboot_info_t*)multiboot_ptr);
+    framebuffer_init((multiboot_info_t *)multiboot_ptr);
     fb.ready = 1;
     // terminal_write("fb.ready = ");
     // terminal_write_hex(fb.ready);
     // terminal_write("\n");
 
     paging_init(); // Identity + recursive
-    multiboot_info_t* mbi = (multiboot_info_t*)multiboot_ptr;
+    multiboot_info_t *mbi = (multiboot_info_t *)multiboot_ptr;
     uint32_t bitmap_addr = (uint32_t)&__kernel_end + 0x1000;
     uint32_t mem_size = (mbi->mem_upper * 1024) + 0x100000;
 
@@ -322,15 +363,15 @@ void kernel_main(void) {
     jump_to_higher_half();
 }
 
-void kernel_higher_half_main(void) {
-    __attribute__((packed))
-    struct fs
+void kernel_higher_half_main(void)
+{
+    __attribute__((packed)) struct fs
     {
         uint16_t id;
         char name[16];
     };
-    void* heap_start = (void*)0x100000; // Example heap start address
-    size_t total_size = 0x100000; // Example heap size
+    void *heap_start = (void *)0x100000; // Example heap start address
+    size_t total_size = 0x100000;        // Example heap size
     memory_init(heap_start, total_size);
     struct fs myfs = {1, "sachinfs"};
     uint8_t buffers[256];
@@ -342,7 +383,8 @@ void kernel_higher_half_main(void) {
     // terminal_write("Entering Higher Half at 0xC0000000...\n");
 
     // fb.address is already updated in higher_half_map()
-    if (fb.ready) {
+    if (fb.ready)
+    {
         display_logo();
         framebuffer_clear(0x000000); // Match logo background
         background_init();
@@ -360,8 +402,7 @@ void kernel_higher_half_main(void) {
     // terminal_write("Framebuffer at: ");
     // terminal_write_hex((uint32_t)fb.address);
     // terminal_write("\n");
-    terminal_write("Sachin OS: Higher Half Boot Successful\n> ");
-    
+
     // int a = 5;
     // int *p = &a;
     // terminal_write_hex(p);
@@ -394,8 +435,9 @@ void kernel_higher_half_main(void) {
 
     asm volatile("sti");
 
-
-    while (1) asm volatile("hlt");
+    while (1)
+    {
+        pcnet_poll_rx(); // Poll for received packets
+        asm volatile("pause");
+    }
 }
-
-

@@ -36,6 +36,9 @@
 #define PCNET_TX_STP  0x0200
 #define PCNET_TX_ENP  0x0100
 #define PCNET_DESC_OWN 0x8000
+#define PCNET_RX_ERR  0x4000
+#define PCNET_RX_STP  0x0200
+#define PCNET_RX_ENP  0x0100
 
 
 typedef struct
@@ -86,4 +89,6 @@ void pcnet_scan(void);
 void pcnet_init(void);
 int pcnet_init_device(uint8_t bus, uint8_t slot);
 int dma_alloc_page(dma_region_t *ptr);
+void pcnet_poll_rx(void);
+void pcnet_dump_rx_packet(uint32_t index);
 #endif // AMD_PCNET_H

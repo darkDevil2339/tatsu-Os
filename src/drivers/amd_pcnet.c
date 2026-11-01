@@ -6,6 +6,7 @@
 
 extern void terminal_write(const char *s);
 extern void terminal_write_hex(uint32_t n);
+extern void terminal_putchar(char c);
 
 int pcnet_init_device(uint8_t bus, uint8_t slot);
 static uint32_t pcnet_io_base;
@@ -26,6 +27,7 @@ static dma_region_t rx_buffers[PCNET_RX_RING_SIZE];
 static dma_region_t pcnet_tx_buffer;
 static dma_region_t pcnet_init_region;
 static struct pcnet_init_block *pcnet_init_b;
+static uint32_t rx_current = 0;
 
 uint16_t bcnt = 0xF000 | ((uint16_t)(-1536) & 0x0FFF);
 
@@ -98,7 +100,6 @@ int pcnet_wait_init(void)
 
     return 0;
 }
-
 void pcnet_scan(void)
 {
     for (int bus = 0; bus < 256; bus++)
@@ -111,19 +112,19 @@ void pcnet_scan(void)
             {
                 uint16_t device_id = pciConfigReadWord(bus, slot, 0, 2);
 
-                terminal_write("Found device: Vendor ID = ");
-                terminal_write_hex(vendor_id);
-                terminal_write(", Device ID = ");
-                terminal_write_hex(device_id);
-                terminal_write("\n");
+                // terminal_write("Found device: Vendor ID = ");
+                // terminal_write_hex(vendor_id);
+                // terminal_write(", Device ID = ");
+                // terminal_write_hex(device_id);
+                // terminal_write("\n");
 
                 if (vendor_id == 0x1022 && device_id == 0x2000)
                 {
-                    terminal_write("AMD PCnet device found at bus ");
-                    terminal_write_hex(bus);
-                    terminal_write(", slot ");
-                    terminal_write_hex(slot);
-                    terminal_write("\n");
+                    // terminal_write("AMD PCnet device found at bus ");
+                    // terminal_write_hex(bus);
+                    // terminal_write(", slot ");
+                    // terminal_write_hex(slot);
+                    // terminal_write("\n");
 
                     // Initialize the specific hardware instance found
                     pcnet_init_device(bus, slot);
@@ -145,33 +146,33 @@ int pcnet_init_device(uint8_t bus, uint8_t slot)
     pcnet_io_base = actual_io_port;
     if (!(io_base & 1))
     {
-        terminal_write("PCnet BAR0 is not an I/O BAR!\n");
+        // terminal_write("PCnet BAR0 is not an I/O BAR!\n");
         return 0;
     }
 
-    terminal_write("AMD PCnet I/O Base Address: ");
-    terminal_write_hex(actual_io_port);
-    terminal_write("\n");
+    // terminal_write("AMD PCnet I/O Base Address: ");
+    // terminal_write_hex(actual_io_port);
+    // terminal_write("\n");
     uint16_t command = pciConfigReadWord(bus, slot, 0, 0x04);
     command |= (1 << 0); // I/O Space Enable
     command |= (1 << 2); // Bus Master Enable
     pciConfigWriteword(bus, slot, 0, 0x04, command);
 
     uint16_t reset = inw(actual_io_port + 0x14);
-    terminal_write("AMD PCnet Reset Register Value: ");
-    terminal_write_hex(reset);
-    terminal_write("\n");
+    // terminal_write("AMD PCnet Reset Register Value: ");
+    // terminal_write_hex(reset);
+    // terminal_write("\n");
     uint16_t csr0 = pcnet_read_csr(0);
-    terminal_write("AMD PCnet CSR0 Register Value: ");
-    terminal_write_hex(csr0);
-    terminal_write("\n");
-    terminal_write_hex(csr0);
+    // terminal_write("AMD PCnet CSR0 Register Value: ");
+    // terminal_write_hex(csr0);
+    // terminal_write("\n");
+    // terminal_write_hex(csr0);
 
     pcnet_write_bcr(20, 0x0102);
     uint16_t style = pcnet_read_bcr(20);
-    terminal_write("BCR20: ");
-    terminal_write_hex(style);
-    terminal_write("\n");
+    // terminal_write("BCR20: ");
+    // terminal_write_hex(style);
+    // terminal_write("\n");
 
     if ((style & 0xFF) == 0x02 &&
         (style & 0x0300) == 0x0300)
@@ -191,24 +192,24 @@ int pcnet_init_device(uint8_t bus, uint8_t slot)
     memset(pcnet_layout, 0, sizeof(pcnet_dma_layout_t));
     rx_ring_phys = pcnet_desc_region.phys;
     tx_ring_phys = pcnet_desc_region.phys + sizeof(pcnet_layout->rx);
-    terminal_write("DMA physical: ");
-    terminal_write_hex((uint32_t)pcnet_desc_region.phys);
-    terminal_write("\n");
-    terminal_write("DMA virtual: ");
-    terminal_write("\n");
-    terminal_write_hex((uint32_t)pcnet_desc_region.virt);
-    terminal_write("\n");
-    terminal_write("rx physical: ");
-    terminal_write_hex((uint32_t)rx_ring_phys);
-    terminal_write("\n");
-    terminal_write("tx physical: ");
-    terminal_write_hex((uint32_t)tx_ring_phys);
+    // terminal_write("DMA physical: ");
+    // terminal_write_hex((uint32_t)pcnet_desc_region.phys);
+    // terminal_write("\n");
+    // terminal_write("DMA virtual: ");
+    // terminal_write("\n");
+    // terminal_write_hex((uint32_t)pcnet_desc_region.virt);
+    // terminal_write("\n");
+    // terminal_write("rx physical: ");
+    // terminal_write_hex((uint32_t)rx_ring_phys);
+    // terminal_write("\n");
+    // terminal_write("tx physical: ");
+    // terminal_write_hex((uint32_t)tx_ring_phys);
     for (uint32_t x = 0; x < PCNET_RX_RING_SIZE; x++)
     {
 
         if (!dma_alloc_page(&rx_buffers[x]))
         {
-            terminal_write("RX buffer allocation failed!");
+            // terminal_write("RX buffer allocation failed!");
             return 0;
         }
 
@@ -227,7 +228,7 @@ int pcnet_init_device(uint8_t bus, uint8_t slot)
     }
     if (!dma_alloc_page(&pcnet_tx_buffer))
     {
-        terminal_write("TX buffer allocation failed!");
+        // terminal_write("TX buffer allocation failed!");
         return 0;
     }
     uint8_t *frame = (uint8_t *)pcnet_tx_buffer.virt;
@@ -260,8 +261,8 @@ int pcnet_init_device(uint8_t bus, uint8_t slot)
 
     if (!dma_alloc_page(&pcnet_init_region))
     {
-        terminal_write("Init block DMA allocation failed!");
-        // return 0;
+        // terminal_write("Init block DMA allocation failed!");
+        return 0;
     }
 
     pcnet_init_b = (struct pcnet_init_block *)pcnet_init_region.virt;
@@ -307,7 +308,7 @@ int pcnet_init_device(uint8_t bus, uint8_t slot)
     if (!pcnet_wait_init())
     {
         terminal_write("PCnet initialization timeout!\n");
-        // return 0;
+        return 0;
     }
 
     terminal_write("PCnet initialization successful!\n");
@@ -353,6 +354,7 @@ int pcnet_init_device(uint8_t bus, uint8_t slot)
     terminal_write("CSR0 after TX: ");
     terminal_write_hex(tx_csr0);
     terminal_write("\n");
+
     return 1;
 }
 
@@ -366,4 +368,85 @@ void pcnet_init(void)
     _Static_assert(_Alignof(struct pcnet_tx_desc) == 16, "TX descriptor alignment error");
     _Static_assert(sizeof(pcnet_dma_layout_t) <= 4096, "doesn't fit");
     pcnet_scan();
+}
+
+#define PCNET_RX_ERR  0x4000
+#define PCNET_RX_STP  0x0200
+#define PCNET_RX_ENP  0x0100
+
+void pcnet_poll_rx(void)
+{
+    while (1)
+    {
+        struct pcnet_rx_desc *desc =
+            &pcnet_layout->rx[rx_current];
+
+        // NIC still owns this descriptor.
+        if (desc->status & PCNET_DESC_OWN)
+            break;
+
+        uint16_t status = desc->status;
+        uint32_t msg_length = desc->msg_length & 0x0FFF;
+
+        terminal_write("RX descriptor ");
+        terminal_write_hex(rx_current);
+        terminal_write("\n");
+
+        // Check whether the packet is valid.
+        if (!(status & PCNET_RX_ERR) &&
+            (status & PCNET_RX_STP) &&
+            (status & PCNET_RX_ENP) &&
+            msg_length >= 18 &&
+            msg_length <= PCNET_RX_BUFFER_SIZE)
+        {
+            // Ethernet FCS is 4 bytes.
+            uint32_t packet_length = msg_length - 4;
+
+            // terminal_write("Valid packet: ");
+            // terminal_write_hex(packet_length);
+            // terminal_write(" bytes\n");
+
+            pcnet_dump_rx_packet(rx_current);
+        }
+        else
+        {
+            terminal_write("Invalid or unsupported RX packet\n");
+        }
+
+        // Reset descriptor metadata.
+        desc->length = 0xF000 |
+            ((uint16_t)(-PCNET_RX_BUFFER_SIZE) & 0x0FFF);
+
+        desc->msg_length = 0;
+        desc->reserved = 0;
+
+        // Ensure descriptor updates happen before OWN is published.
+        asm volatile("" ::: "memory");
+
+        // Return descriptor to NIC.
+        desc->status = PCNET_DESC_OWN;
+
+        // Advance to the next descriptor.
+        rx_current = (rx_current + 1) % PCNET_RX_RING_SIZE;
+    }
+}
+void pcnet_dump_rx_packet(uint32_t index)
+{
+    uint8_t *packet = (uint8_t *)rx_buffers[index].virt;
+
+    // Ethernet frame: 60 bytes, excluding FCS
+    uint32_t length = 60;
+
+    terminal_write("Received packet bytes:\n");
+
+    for (uint32_t i = 0; i < length; i++)
+    {
+        terminal_putchar(packet[i]);
+        // terminal_write(" ");
+
+        if ((i + 1) % 16 == 0)
+            terminal_write("\n");
+    }
+
+    terminal_write("\n");
 }
